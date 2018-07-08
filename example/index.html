@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>Vividup Example</title>
+
+    <script src="../vividup.js"></script>
+    <script>
+      function sendVideo() {
+        Vividup.upload({
+          url: document.getElementById("url").value,
+          file: document.getElementById("file").files[0]
+        });
+      }
+
+      function getFileSize() {
+        let file = document.getElementById("file").files[0];
+        alert(file.size);
+      }
+    </script>
+  </head>
+  <body>
+    <div style="display: flex; flex-direction: column; max-width: 500px; height: 100px; justify-content: space-between;">
+      <input type="file" id="file" />
+      <input type="text" id="url" placeholder="url" />
+      <div>
+        <button onclick="getFileSize()">Get File Size</button>
+        <button onclick="sendVideo()">Upload</button>
+      </div>
+    </div>
+  </body>
+</html>
