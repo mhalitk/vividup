@@ -32,15 +32,15 @@ Vividup.prototype.upload = function(opt) {
 
   sendVideo(o, handlePatchResult);
 
-  function handlePatchResult(err, result) {
+  let handlePatchResult = function(err, result) {
     if (err) {
-      if (err === "conflict") {
+      if (err.reason === "conflict") {
         updateUploadOffset(o.url, function(uploadOffset) {
           o.uploadOffset = uploadOffset;
           sendVideo(o, handlePatchResult);
         });
       } else {
-        callIfFunction(o.onError);
+        callIfFunction(o.onError, err);
       }
     } else {
       if (result.complete) {
@@ -82,7 +82,6 @@ let callIfFunction = function(f, args) {
 
 let sendVideo = function(o, cb) {
   let request = new XMLHttpRequest();
-
   request.open("PATCH", o.url, true);
   request.setRequestHeader("Tus-Resumable", "1.0.0");
   request.setRequestHeader("Content-Type", "application/offset+octet-stream");
@@ -97,9 +96,21 @@ let sendVideo = function(o, cb) {
           complete: newUploadOffset === o.file.size
         });
       } else if (request.status === 409) {
-        cb("conflict");
+        cb({
+          status: "error",
+          reason: "conflict"
+        });
       } else {
-        cb("error");
+        cb({
+          status: "error",
+          reason: "Unexpected status code",
+          message: "Vimeo server returned " + request.status + " status code " +
+                   " while uploading video. You may want to try again.",
+          meta: {
+            url: o.url,
+            uploadOffset: o.uploadOffset
+          }
+        });
       }
     }
   };
