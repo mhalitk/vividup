@@ -8,6 +8,15 @@ function Vividup() {
 };
 
 /**
+ * Starts uploading video to vimeo with given options. If you already started uploading
+ * video before this function will capture where it's left and will continue from there.
+ * 
+ * Video will be split into chunks for uploading, you can specify chunk size with chunkSize
+ * option.
+ * 
+ * If you want to get information about progress you can pass callback function in onProgress
+ * option.
+ * 
  * 
  * @param {Object} options
  * @param {string} options.url Vimeo video upload url, this is the url video creation API returns
