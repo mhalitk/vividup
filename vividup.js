@@ -50,7 +50,7 @@ Vividup.prototype.upload = function(opt) {
         callIfFunction(o.onProgress, {
           size: o.file.size,
           offset: o.uploadOffset,
-          percent: (100*o.uploadOffset)/o.file.size
+          percent: Math.floor((100*o.uploadOffset)/o.file.size)
         });
         sendVideo(o, handlePatchResult);
       }
