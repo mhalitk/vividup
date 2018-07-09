@@ -7,7 +7,10 @@
       function sendVideo() {
         Vividup.upload({
           url: document.getElementById("url").value,
-          file: document.getElementById("file").files[0]
+          file: document.getElementById("file").files[0],
+          onProgress: function(progress) {
+            document.getElementById("progress").innerHTML = progress.percent + "%";
+          }
         });
       }
 
@@ -21,6 +24,7 @@
     <div style="display: flex; flex-direction: column; max-width: 500px; height: 100px; justify-content: space-between;">
       <input type="file" id="file" />
       <input type="text" id="url" placeholder="url" />
+      <p id="progress"></p>
       <div>
         <button onclick="getFileSize()">Get File Size</button>
         <button onclick="sendVideo()">Upload</button>
