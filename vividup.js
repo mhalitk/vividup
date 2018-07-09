@@ -38,11 +38,11 @@ Vividup.prototype.upload = function(opt) {
         callIfFunction(o.onSuccess);
       } else {
         o.uploadOffset = result.uploadOffset;
-        callIfFunction(o.onProgress, [{
+        callIfFunction(o.onProgress, {
           size: o.file.size,
           offset: o.uploadOffset,
           percent: (100*o.uploadOffset)/o.file.size
-        }]);
+        });
         sendVideo(o, handlePatchResult);
       }
     }
