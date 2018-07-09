@@ -1,5 +1,10 @@
 (function(window){
 
+/**
+ * VImeo VIDeo UPloader class helps to upload video files to Vimeo with tus approach.
+ * It doesn't create video on Vimeo. It uploads the video file for previously created
+ * videos. Video should be created with tus approach to vividup work correctly.
+ */
 function Vividup() {
   this.options = {
     uploadOffset: "0"
