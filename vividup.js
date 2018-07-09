@@ -2,8 +2,7 @@
 
 function Vividup() {
   this.options = {
-    uploadOffset: "0",
-    chunkSize: 64*1024
+    uploadOffset: "0"
   };
 };
 
@@ -11,18 +10,13 @@ function Vividup() {
  * Starts uploading video to vimeo with given options. If you already started uploading
  * video before this function will capture where it's left and will continue from there.
  * 
- * Video will be split into chunks for uploading, you can specify chunk size with chunkSize
- * option.
- * 
  * If you want to get information about progress you can pass callback function in onProgress
  * option.
- * 
  * 
  * @param {Object} options
  * @param {string} options.url Vimeo video upload url, this is the url video creation API returns
  * @param {File} options.file Video file to upload
  * @param {number} [options.uploadOffset] Upload offset, default value is 0
- * @param {number} [options.chunkSize] Chunk size for video upload, default value is 64KB
  * @param {Function} [options.onSuccess] Callback function that will call when upload complete successfully
  * @param {Function} [options.onError] Callback function that will call if an error occurs
  */
@@ -30,14 +24,14 @@ Vividup.prototype.upload = function(opt) {
   this.options = Object.assign(this.options, opt);
   let o = this.options;
 
-  sendVideo(o, handlePatchResult);
+  sendVideo(o, handleProgress, handlePatchResult);
 
-  let handlePatchResult = function(err, result) {
+  function handlePatchResult(err, result) {
     if (err) {
       if (err.reason === "conflict") {
         updateUploadOffset(o.url, function(uploadOffset) {
           o.uploadOffset = uploadOffset;
-          sendVideo(o, handlePatchResult);
+          sendVideo(o, handleProgress, handlePatchResult);
         });
       } else {
         callIfFunction(o.onError, err);
@@ -47,14 +41,17 @@ Vividup.prototype.upload = function(opt) {
         callIfFunction(o.onSuccess);
       } else {
         o.uploadOffset = result.uploadOffset;
-        callIfFunction(o.onProgress, {
-          size: o.file.size,
-          offset: o.uploadOffset,
-          percent: Math.floor((100*o.uploadOffset)/o.file.size)
-        });
-        sendVideo(o, handlePatchResult);
+        sendVideo(o, handleProgress, handlePatchResult);
       }
     }
+  }
+
+  function handleProgress(progress) {
+    callIfFunction(o.onProgress, {
+      size: progress.size,
+      offset: progress.offset,
+      percent: Math.floor(progress.percent)
+    });
   }
 }
 
@@ -80,7 +77,7 @@ let callIfFunction = function(f, args) {
   }
 }
 
-let sendVideo = function(o, cb) {
+let sendVideo = function(o, onProgress, cb) {
   let request = new XMLHttpRequest();
   request.open("PATCH", o.url, true);
   request.setRequestHeader("Tus-Resumable", "1.0.0");
@@ -115,7 +112,17 @@ let sendVideo = function(o, cb) {
     }
   };
 
-  request.send(o.file.slice(o.uploadOffset, o.uploadOffset+o.chunkSize));
+  request.upload.onprogress = function(e) {
+    if (e.lengthComputable) {
+      onProgress({
+        size: e.total,
+        offset: e.loaded,
+        percent: (e.loaded/e.total) * 100
+      });
+    }
+  };
+
+  request.send(o.file);
 }
 
 window.Vividup = new Vividup();
