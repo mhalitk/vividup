@@ -127,7 +127,7 @@ let sendVideo = function(o, onProgress, cb) {
     }
   };
 
-  request.send(o.file);
+  request.send(o.file.slice(o.uploadOffset));
 }
 
 window.Vividup = new Vividup();
