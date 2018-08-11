@@ -29,12 +29,23 @@ Vividup.prototype.upload = function(opt) {
   this.options = Object.assign(this.options, opt);
   let o = this.options;
 
-  sendVideo(o, handleProgress, handlePatchResult);
+  updateUploadOffset(o.url, function(err, uploadOffset) {
+    if (err) {
+      return callIfFunction(o.onError, err);
+    }
+    
+    o.uploadOffset = uploadOffset;
+    sendVideo(o, handleProgress, handlePatchResult);
+  });
 
   function handlePatchResult(err, result) {
     if (err) {
       if (err.reason === "conflict") {
-        updateUploadOffset(o.url, function(uploadOffset) {
+        updateUploadOffset(o.url, function(err, uploadOffset) {
+          if (err) {
+            return callIfFunction(o.onError, err);
+          }
+
           o.uploadOffset = uploadOffset;
           sendVideo(o, handleProgress, handlePatchResult);
         });
@@ -60,16 +71,18 @@ Vividup.prototype.upload = function(opt) {
   }
 }
 
-let request = new XMLHttpRequest();
 let updateUploadOffset = function(url, cb) {
+  let request = new XMLHttpRequest();
   request.open("HEAD", url, true);
   request.setRequestHeader("Tus-Resumable", "1.0.0");
   request.onreadystatechange = function() {
     if (request.readyState === 4) {
       if (request.status === 200) {
-        cb(parseInt(request.getResponseHeader("upload-offset")));
+        cb(null, parseInt(request.getResponseHeader("upload-offset")));
+      } else if (request.status === 404) {
+        cb ("404 Couldn't find the url")
       } else {
-        updateUploadOffset(cb);
+        updateUploadOffset(url, cb);
       }
     }
   }
